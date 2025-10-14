@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor Markdown para PDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 95vw;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f9f9f9;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .controls-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .controls-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-upload {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-upload:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
+        }
+
+        .document-name {
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+            margin-right: 15px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .content-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 70vh;
+        }
+
+        .editor-section, .preview-section {
+            padding: 40px;
+        }
+
+        .editor-section {
+            border-right: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .editor-section.drag-over {
+            background-color: #f0f8ff !important;
+            border: 2px dashed #667eea !important;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            height: calc(100vh - 350px);
+            min-height: 600px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #preview {
+            height: calc(100vh - 350px);
+            min-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 40px;
+            background: white;
+        }
+
+        /* Estilos para o preview do markdown */
+        #preview h1 {
+            font-size: 24px;
+            margin-top: 24px;
+            margin-bottom: 16px;
+            color: #1a202c;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            page-break-after: avoid;
+        }
+
+        #preview h2 {
+            font-size: 20px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            color: #2d3748;
+            page-break-after: avoid;
+        }
+
+        #preview h3 {
+            font-size: 16px;
+            margin-top: 16px;
+            margin-bottom: 10px;
+            color: #4a5568;
+            page-break-after: avoid;
+        }
+
+        #preview h4 {
+            font-size: 14px;
+            margin-top: 14px;
+            margin-bottom: 8px;
+            color: #4a5568;
+            page-break-after: avoid;
+        }
+
+        #preview p {
+            margin-bottom: 12px;
+            line-height: 1.7;
+            color: #2d3748;
+        }
+
+        #preview ul, #preview ol {
+            margin-bottom: 12px;
+            padding-left: 24px;
+            page-break-inside: avoid;
+        }
+
+        #preview li {
+            margin-bottom: 6px;
+            line-height: 1.6;
+        }
+
+        #preview code {
+            background: #f7fafc;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #e53e3e;
+            word-break: break-all;
+        }
+
+        #preview pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-width: 100%;
+            width: 100%;
+            font-size: 11px;
+            line-height: 1.4;
+            page-break-inside: avoid;
+        }
+
+        #preview pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        #preview table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            font-size: 13px;
+            page-break-inside: avoid;
+        }
+
+        #preview table th,
+        #preview table td {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            text-align: left;
+        }
+
+        #preview table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        #preview table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        #preview blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #4a5568;
+            font-style: italic;
+            page-break-inside: avoid;
+        }
+
+        #preview img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px auto;
+            border-radius: 8px;
+            display: block;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            page-break-inside: avoid;
+        }
+
+        #preview strong {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Container temporário para PDF - invisível na tela */
+        #pdf-content {
+            position: fixed;
+            left: -9999px;
+            top: 0;
+            width: 170mm;
+            background: white;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #pdf-content h1 {
+            font-size: 24px;
+            margin-top: 24px;
+            margin-bottom: 16px;
+            color: #1a202c;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        #pdf-content h2 {
+            font-size: 20px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            color: #2d3748;
+        }
+
+        #pdf-content h3 {
+            font-size: 16px;
+            margin-top: 16px;
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+
+        #pdf-content h4 {
+            font-size: 14px;
+            margin-top: 14px;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+
+        #pdf-content p {
+            margin-bottom: 12px;
+            line-height: 1.7;
+            color: #2d3748;
+        }
+
+        #pdf-content ul, #pdf-content ol {
+            margin-bottom: 12px;
+            padding-left: 24px;
+        }
+
+        #pdf-content li {
+            margin-bottom: 6px;
+            line-height: 1.6;
+        }
+
+        #pdf-content code {
+            background: #f7fafc;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #e53e3e;
+        }
+
+        #pdf-content pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 16px;
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
+        #pdf-content pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        #pdf-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            margin-bottom: 16px;
+            font-size: 12px;
+        }
+
+        #pdf-content table th,
+        #pdf-content table td {
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #pdf-content table th {
+            background: #f7fafc;
+            font-weight: 600;
+        }
+
+        #pdf-content table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        #pdf-content blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #4a5568;
+            font-style: italic;
+        }
+
+        #pdf-content img {
+                max-width: 100%;
+            height: auto;
+            margin: 15px auto;
+            display: block;
+        }
+
+        #pdf-content strong {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        #pdf-content hr {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay"></div>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Gerando PDF...</div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>📄 Conversor Markdown para PDF</h1>
+            <p>Exemplo com Lorem Ipsum - Demonstração de Funcionalidades</p>
+        </div>
+
+        <div class="controls">
+            <div class="controls-left">
+                <button class="btn btn-secondary" onclick="loadExample()">📝 Exemplo Padrão</button>
+                <button class="btn btn-upload" onclick="uploadMarkdownFile()">📁 Upload .md</button>
+            </div>
+            <div class="controls-right">
+                <div class="document-name" id="documentName"></div>
+            <button class="btn btn-primary" onclick="generatePDF()">⬇️ Gerar PDF</button>
+            </div>
+            <input type="file" id="fileInput" accept=".md,.markdown,.txt" style="display: none;" onchange="handleFileUpload(event)">
+        </div>
+
+        <div class="content-area">
+            <div class="editor-section">
+                <div class="section-title">
+                    ✏️ Editor Markdown
+                </div>
+                <textarea id="markdown" placeholder="Cole seu conteúdo Markdown aqui ou arraste um arquivo .md para cá..."></textarea>
+            </div>
+
+            <div class="preview-section">
+                <div class="section-title">
+                    👁️ Preview
+                </div>
+                <div id="preview"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container temporário para renderização do PDF -->
+    <div id="pdf-content"></div>
+
+    <script>
+        const markdownContent = `# Lorem Ipsum - Documento de Exemplo
+
+## Introdução
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+## Seção Principal
+
+### Subseção 1
+
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+### Subseção 2
+
+Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+
+## Lista de Itens
+
+- **Item 1**: Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
+- **Item 2**: Sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt
+- **Item 3**: Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet
+
+## Código de Exemplo
+
+\`\`\`javascript
+function exemploFuncao(parametro) {
+    console.log('Lorem ipsum dolor sit amet');
+    return parametro * 2;
+}
+
+const resultado = exemploFuncao(42);
+\`\`\`
+
+## Tabela de Dados
+
+| Coluna 1 | Coluna 2 | Coluna 3 |
+|----------|----------|----------|
+| Dados A | Dados B | Dados C |
+| Dados D | Dados E | Dados F |
+| Dados G | Dados H | Dados I |
+
+## Citação
+
+> "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident."
+
+## Link e Imagem
+
+[Link de exemplo](https://www.example.com)
+
+![Imagem de exemplo](images/example-image.png)
+
+## Lista Numerada
+
+1. **Primeiro passo**: Lorem ipsum dolor sit amet
+2. **Segundo passo**: Consectetur adipiscing elit
+3. **Terceiro passo**: Sed do eiusmod tempor incididunt
+4. **Quarto passo**: Ut labore et dolore magna aliqua
+
+## Código Inline
+
+Este é um exemplo de \`código inline\` dentro do texto normal.
+
+## Conclusão
+
+Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur.
+
+---
+
+**Nota**: Este é um documento de exemplo usando Lorem Ipsum para demonstração do conversor Markdown para PDF.`;
+
+        const textarea = document.getElementById('markdown');
+        const preview = document.getElementById('preview');
+
+        function updatePreview() {
+            const markdown = textarea.value;
+            const htmlContent = marked.parse(markdown);
+            updateDocumentName(markdown);
+            preview.innerHTML = htmlContent;
+        }
+
+        function updateDocumentName(markdown) {
+            const documentNameElement = document.getElementById('documentName');
+            
+            if (!markdown || markdown.trim() === '') {
+                documentNameElement.textContent = '';
+                return;
+            }
+            
+            const lines = markdown.split('\n');
+            let documentName = '';
+            
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine.startsWith('# ')) {
+                    documentName = trimmedLine.substring(2).trim();
+                    break;
+                }
+            }
+            
+            if (!documentName) {
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine && !trimmedLine.startsWith('#')) {
+                        documentName = trimmedLine.length > 50 
+                            ? trimmedLine.substring(0, 50) + '...' 
+                            : trimmedLine;
+                        break;
+                    }
+                }
+            }
+            
+            if (!documentName) {
+                documentName = 'Documento Markdown';
+            }
+            
+            documentNameElement.textContent = documentName;
+        }
+
+        function loadExample() {
+            textarea.value = markdownContent;
+            updatePreview();
+        }
+
+        function uploadMarkdownFile() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            
+            if (!file) return;
+
+            const allowedExtensions = ['.md', '.markdown', '.txt'];
+            const fileName = file.name.toLowerCase();
+            const isValidFile = allowedExtensions.some(ext => fileName.endsWith(ext));
+            
+            if (!isValidFile) {
+                alert('Arquivo inválido! Use .md, .markdown ou .txt');
+                return;
+            }
+
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert('Arquivo muito grande! Máximo 5MB');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    window.markdownContent = content;
+                    textarea.value = content;
+                    updatePreview();
+                    event.target.value = '';
+                } catch (error) {
+                    console.error('Erro ao ler arquivo:', error);
+                    alert('Erro ao ler arquivo');
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('Erro ao ler arquivo');
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        textarea.addEventListener('input', updatePreview);
+
+        function setupDragAndDrop() {
+            const editorSection = document.querySelector('.editor-section');
+            
+            editorSection.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                editorSection.classList.add('drag-over');
+            });
+            
+            editorSection.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                editorSection.classList.remove('drag-over');
+            });
+            
+            editorSection.addEventListener('drop', function(e) {
+                e.preventDefault();
+                editorSection.classList.remove('drag-over');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    const allowedExtensions = ['.md', '.markdown', '.txt'];
+                    const fileName = file.name.toLowerCase();
+                    const isValidFile = allowedExtensions.some(ext => fileName.endsWith(ext));
+                    
+                    if (isValidFile) {
+                        const event = { target: { files: [file] } };
+                        handleFileUpload(event);
+                    } else {
+                        alert('❌ Arquivo inválido! Use .md, .markdown ou .txt');
+                    }
+                }
+            });
+        }
+
+        setupDragAndDrop();
+
+        // Função para extrair links do conteúdo HTML
+        function extractLinksFromHTML(htmlContent) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            
+            const links = [];
+            const linkElements = tempDiv.querySelectorAll('a[href]');
+            
+            linkElements.forEach((link, index) => {
+                const text = link.textContent.trim();
+                const href = link.getAttribute('href');
+                
+                if (href && text) {
+                    links.push({
+                        text: text,
+                        href: href,
+                        index: index
+                    });
+                }
+            });
+            
+            return links;
+        }
+
+        // Função para encontrar posições dos links no canvas
+        function findLinkPositions(canvas, container, links) {
+            const linkPositions = [];
+            const containerRect = container.getBoundingClientRect();
+            
+            links.forEach(link => {
+                // Encontrar o elemento link no container
+                const linkElement = container.querySelector(`a[href="${link.href}"]`);
+                if (linkElement) {
+                    const rect = linkElement.getBoundingClientRect();
+                    const relativeTop = rect.top - containerRect.top;
+                    const relativeLeft = rect.left - containerRect.left;
+                    const relativeBottom = rect.bottom - containerRect.top;
+                    const relativeRight = rect.right - containerRect.left;
+                    
+                    // Calcular posições no canvas (considerando escala)
+                    const scale = canvas.width / containerRect.width;
+                    
+                    linkPositions.push({
+                        text: link.text,
+                        href: link.href,
+                        x: relativeLeft * scale,
+                        y: relativeTop * scale,
+                        width: (relativeRight - relativeLeft) * scale,
+                        height: (relativeBottom - relativeTop) * scale
+                    });
+                }
+            });
+            
+            return linkPositions;
+        }
+
+        async function generatePDF() {
+            const loading = document.getElementById('loading');
+            const overlay = document.getElementById('overlay');
+            
+            loading.classList.add('active');
+            overlay.classList.add('active');
+
+            try {
+                if (typeof window.jspdf === 'undefined') {
+                    throw new Error('jsPDF não carregado');
+                }
+
+                const { jsPDF } = window.jspdf;
+                
+                // Criar container temporário com o conteúdo
+                const pdfContainer = document.getElementById('pdf-content');
+                const previewContent = document.getElementById('preview').innerHTML;
+                pdfContainer.innerHTML = previewContent;
+                
+                // Extrair links do conteúdo
+                const links = extractLinksFromHTML(previewContent);
+                
+                // Aguardar renderização inicial
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                // Adicionar espaços para evitar quebras ruins
+                await adjustPageBreaks(pdfContainer);
+                
+                // Aguardar re-renderização após ajustes
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Criar PDF
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 20;
+                const contentWidth = pageWidth - (2 * margin);
+                const availableHeight = pageHeight - (2 * margin);
+
+                // Capturar todo o conteúdo
+                const canvas = await html2canvas(pdfContainer, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
+
+                // Encontrar posições dos links no canvas
+                const linkPositions = findLinkPositions(canvas, pdfContainer, links);
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const imgWidth = contentWidth;
+                const imgHeight = (canvas.height * contentWidth) / canvas.width;
+                
+                const totalPages = Math.ceil(imgHeight / availableHeight);
+
+                // Adicionar páginas
+                for (let i = 0; i < totalPages; i++) {
+                    if (i > 0) {
+                        pdf.addPage();
+                    }
+                    
+                    const sourceY = i * availableHeight * (canvas.height / imgHeight);
+                    const sourceHeight = Math.min(
+                        availableHeight * (canvas.height / imgHeight),
+                        canvas.height - sourceY
+                    );
+                    
+                    const pageCanvas = document.createElement('canvas');
+                    pageCanvas.width = canvas.width;
+                    pageCanvas.height = sourceHeight;
+                    
+                    const pageCtx = pageCanvas.getContext('2d');
+                    pageCtx.drawImage(
+                        canvas,
+                        0, sourceY,
+                        canvas.width, sourceHeight,
+                        0, 0,
+                        canvas.width, sourceHeight
+                    );
+                    
+                    const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+                    const pageImgHeight = (sourceHeight * contentWidth) / canvas.width;
+                    
+                    pdf.addImage(pageImgData, 'JPEG', margin, margin, contentWidth, pageImgHeight);
+                    
+                    // Adicionar links clicáveis nesta página
+                    const pageStartY = i * availableHeight * (canvas.height / imgHeight);
+                    const pageEndY = pageStartY + sourceHeight;
+                    
+                    linkPositions.forEach(linkPos => {
+                        // Verificar se o link está nesta página
+                        if (linkPos.y >= pageStartY && linkPos.y < pageEndY) {
+                            // Calcular posição relativa na página
+                            const relativeY = linkPos.y - pageStartY;
+                            const linkY = margin + (relativeY * contentWidth) / canvas.width;
+                            const linkX = margin + (linkPos.x * contentWidth) / canvas.width;
+                            const linkWidth = (linkPos.width * contentWidth) / canvas.width;
+                            const linkHeight = (linkPos.height * contentWidth) / canvas.width;
+                            
+                            // Adicionar link clicável
+                            pdf.link(linkX, linkY, linkWidth, linkHeight, {
+                                url: linkPos.href
+                            });
+                        }
+                    });
+                }
+
+                pdf.save('Documentacao_Markdown.pdf');
+                pdfContainer.innerHTML = '';
+                
+            } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                alert('Erro ao gerar PDF: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        }
+
+        async function adjustPageBreaks(container) {
+            // Altura da página em pixels (A4 = 297mm, menos margens = 257mm)
+            const pageHeightMM = 297 - 40; // 257mm disponível
+            const pixelsPerMM = container.offsetWidth / 170; // 170mm de largura
+            const pageHeightPx = pageHeightMM * pixelsPerMM;
+
+            // Remover espaçadores anteriores (caso regenere)
+            container.querySelectorAll('.page-break-spacer').forEach(el => el.remove());
+
+            // Pegar todos os elementos de nível superior
+            const allElements = Array.from(container.children);
+
+            for (let i = 0; i < allElements.length; i++) {
+                const element = allElements[i];
+                
+                // Ignorar espaçadores
+                if (element.classList.contains('page-break-spacer')) {
+                    continue;
+                }
+                
+                const rect = element.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                const elementTop = rect.top - containerRect.top;
+                const elementBottom = elementTop + rect.height;
+                
+                // Calcular em qual "página virtual" inicia
+                const startPage = Math.floor(elementTop / pageHeightPx);
+                const endPage = Math.floor(elementBottom / pageHeightPx);
+                
+                // Se o elemento se estende por múltiplas páginas
+                const spanMultiplePages = startPage !== endPage;
+                
+                if (spanMultiplePages) {
+                    const pageEndY = (startPage + 1) * pageHeightPx;
+                    const elementIsUnbreakable = isUnbreakableElement(element);
+                    
+                    // Se é um elemento que não deve ser quebrado
+                    if (elementIsUnbreakable) {
+                        // Buscar um grupo anterior (título + conteúdo)
+                        const groupStart = findGroupStart(allElements, i);
+                        const targetElement = allElements[groupStart];
+                        
+                        const targetRect = targetElement.getBoundingClientRect();
+                        const targetTop = targetRect.top - containerRect.top;
+                        const spaceNeeded = pageEndY - targetTop;
+                        
+                        // Criar espaçador
+                        const spacer = document.createElement('div');
+                        spacer.className = 'page-break-spacer';
+                        spacer.style.height = spaceNeeded + 'px';
+                        spacer.style.width = '100%';
+                        
+                        // Inserir antes do início do grupo
+                        targetElement.parentNode.insertBefore(spacer, targetElement);
+                        
+                        // Importante: recalcular após inserir espaçador
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
+                }
+            }
+        }
+
+        function isUnbreakableElement(element) {
+            const tag = element.tagName;
+            const unbreakableTags = ['TABLE', 'PRE', 'BLOCKQUOTE', 'UL', 'OL', 'IMG', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+            return unbreakableTags.includes(tag);
+        }
+
+        function findGroupStart(allElements, currentIndex) {
+            // Se o elemento atual é um título, não precisa buscar
+            const currentTag = allElements[currentIndex].tagName;
+            if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(currentTag)) {
+                return currentIndex;
+            }
+            
+            // Procurar até 5 elementos anteriores por um título relacionado
+            let startIndex = currentIndex;
+            const maxLookback = 5;
+            
+            for (let i = 1; i <= maxLookback && (currentIndex - i) >= 0; i++) {
+                const prevElement = allElements[currentIndex - i];
+                const prevTag = prevElement.tagName;
+                
+                // Se encontrou um título, esse é o início do grupo
+                if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(prevTag)) {
+                    startIndex = currentIndex - i;
+                    break;
+                }
+                
+                // Se encontrou outro elemento quebrador, parar busca
+                if (['TABLE', 'PRE', 'BLOCKQUOTE', 'IMG'].includes(prevTag)) {
+                    break;
+                }
+                
+                // Se é um parágrafo muito longo, parar
+                if (prevTag === 'P' && prevElement.textContent.length > 200) {
+                    break;
+                }
+                
+                // Ignorar espaçadores
+                if (prevElement.classList.contains('page-break-spacer')) {
+                    continue;
+                }
+            }
+            
+            return startIndex;
+        }
+
+        loadExample();
+    </script>
+</body>
+</html>
