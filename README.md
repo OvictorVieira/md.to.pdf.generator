@@ -224,14 +224,3 @@ Para problemas ou dúvidas:
 ## 📝 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
-
-## 🎉 Agradecimentos
-
-- [Marked.js](https://marked.js.org/) - Parser de Markdown
-- [html2canvas](https://html2canvas.hertzen.com/) - Captura de tela
-- [jsPDF](https://github.com/parallax/jsPDF) - Geração de PDF
-- [live-server](https://github.com/tapio/live-server) - Servidor de desenvolvimento
-
----
-
-**Desenvolvido com ❤️ para facilitar a conversão de Markdown para PDF**
