@@ -1,129 +1,237 @@
-# 📄 Conversor Markdown para PDF (Local)
+# 📄 Conversor Markdown para PDF
 
-Este projeto contém um conversor de Markdown para PDF que utiliza `html2canvas` para renderização fiel do preview. A aplicação foi desenvolvida para documentação técnica de endpoints de pagamento e sistemas financeiros.
+Um conversor completo e moderno de Markdown para PDF com interface intuitiva, preview em tempo real e links clicáveis. Desenvolvido para documentação técnica, relatórios e qualquer conteúdo que precise ser convertido de Markdown para PDF de forma profissional.
 
-## 🚀 Como Executar o Projeto
+## ✨ Funcionalidades
 
-Para evitar o erro de segurança **"Tainted canvases may not be exported"** (causado ao abrir arquivos HTML diretamente com o protocolo `file:///`), é necessário executar a aplicação em um servidor web local.
+### 🎯 Principais Recursos
+- **Editor Markdown Intuitivo**: Interface de edição com syntax highlighting
+- **Preview em Tempo Real**: Visualização instantânea do conteúdo Markdown
+- **Geração de PDF Completa**: Conversão do preview para PDF sem cortes de conteúdo
+- **Links Clicáveis**: Links funcionais no PDF gerado
+- **Upload de Arquivos**: Suporte a drag & drop para arquivos .md
+- **Quebra de Páginas Inteligente**: Evita quebras inadequadas em elementos importantes
+- **Layout Responsivo**: Interface adaptável para diferentes tamanhos de tela
+- **Suporte a Imagens**: Imagens locais e externas
+- **Estilização Completa**: Suporte a todos os elementos Markdown
 
-O projeto já está configurado para usar o `live-server` com um único comando `npm start`.
+### 🔗 Links Clicáveis no PDF
+- Links do Markdown são convertidos em links clicáveis no PDF
+- Funcionam em qualquer visualizador de PDF
+- Abrem automaticamente no navegador padrão
+
+### 📱 Interface Responsiva
+- Design moderno e limpo
+- Adaptável para desktop, tablet e mobile
+- Controles intuitivos e acessíveis
+
+## 🚀 Como Executar
 
 ### Pré-requisitos
+- **Node.js** (versão 14 ou superior)
+- **npm** (versão 6 ou superior)
 
-Certifique-se de ter o **Node.js** (versão 14 ou superior) e o **npm** (versão 6 ou superior) instalados na sua máquina.
+### Instalação e Execução
 
-### Passos de Execução
+1. **Clone o repositório**:
+   ```bash
+   git clone <url-do-repositorio>
+   cd md.to.pdf.generator
+   ```
 
-1. **Instale as dependências** do projeto:
+2. **Instale as dependências**:
    ```bash
    npm install
    ```
 
-2. **Inicie o servidor local** e abra o navegador automaticamente:
+3. **Inicie o servidor local**:
    ```bash
    npm start
    ```
 
-O servidor será iniciado em `http://localhost:8080` e você poderá acessar a aplicação, permitindo a correta geração do PDF.
+4. **Acesse a aplicação**:
+   - O navegador abrirá automaticamente em `http://localhost:8080`
+   - Ou acesse manualmente a URL
 
-## 🛠️ Funcionalidades
+## 📖 Como Usar
 
-- **Editor Markdown**: Interface de edição com syntax highlighting
-- **Preview em Tempo Real**: Visualização instantânea do conteúdo Markdown
-- **Geração de PDF**: Conversão do preview para PDF usando html2canvas
-- **Exemplo Pronto**: Documentação técnica de endpoint de duplicação de cartão
-- **Design Responsivo**: Interface adaptável para diferentes tamanhos de tela
+### 1. **Editar Conteúdo**
+- Digite ou cole seu conteúdo Markdown no editor à esquerda
+- Use o exemplo padrão como referência clicando em "📝 Exemplo Padrão"
 
-## 📋 Tecnologias Utilizadas
+### 2. **Visualizar Preview**
+- Veja o preview em tempo real no painel à direita
+- O preview mostra exatamente como ficará o PDF
 
-- **HTML5/CSS3**: Interface e estilização
+### 3. **Upload de Arquivos**
+- Clique em "📁 Upload .md" para carregar arquivos
+- Ou arraste e solte arquivos .md diretamente no editor
+- Suporta arquivos .md, .markdown e .txt
+
+### 4. **Gerar PDF**
+- Clique em "⬇️ Gerar PDF" para baixar o arquivo
+- O PDF será gerado com todo o conteúdo e links clicáveis
+- Nome do arquivo baseado no título do documento
+
+## 🛠️ Tecnologias Utilizadas
+
+### Frontend
+- **HTML5/CSS3**: Interface e estilização responsiva
 - **JavaScript Vanilla**: Lógica da aplicação
 - **Marked.js**: Parser de Markdown
 - **html2canvas**: Captura de tela para PDF
 - **jsPDF**: Geração de arquivos PDF
+
+### Desenvolvimento
 - **live-server**: Servidor de desenvolvimento local
+- **Node.js/npm**: Gerenciamento de dependências
 
-## 🔧 Configuração Técnica
-
-### html2canvas Configuration
-
-A aplicação está configurada para lidar com recursos externos e CORS:
-
-```javascript
-html2canvas(content, {
-    scale: 2,
-    useCORS: true,
-    logging: false,
-    backgroundColor: '#ffffff'
-});
-```
-
-### Estrutura do Projeto
+## 📁 Estrutura do Projeto
 
 ```
 md.to.pdf.generator/
 ├── index.html              # Aplicação principal
 ├── package.json            # Configurações do projeto
+├── package-lock.json       # Lock file das dependências
 ├── README.md              # Documentação
-└── fluxograma_duplicate_card.png  # Imagem de exemplo
+├── images/                # Imagens de exemplo
+│   └── example-image.png
+└── .gitignore             # Arquivo de exclusões do Git
 ```
+
+## ⚙️ Configurações Técnicas
+
+### html2canvas Configuration
+```javascript
+html2canvas(container, {
+    scale: 2,                    // Qualidade da imagem
+    useCORS: true,              // Suporte a recursos externos
+    allowTaint: true,           // Permite imagens externas
+    backgroundColor: '#ffffff',  // Fundo branco
+    logging: false              // Desabilita logs
+});
+```
+
+### jsPDF Configuration
+```javascript
+const pdf = new jsPDF({
+    orientation: 'portrait',    // Orientação vertical
+    unit: 'mm',                // Unidade em milímetros
+    format: 'a4'               // Formato A4
+});
+```
+
+## 🎨 Elementos Markdown Suportados
+
+### Texto
+- **Negrito** e *itálico*
+- `Código inline`
+- ~~Riscado~~
+- Links [texto](url)
+
+### Cabeçalhos
+- # H1
+- ## H2
+- ### H3
+- #### H4
+
+### Listas
+- Listas não ordenadas
+- 1. Listas ordenadas
+- [ ] Listas de tarefas
+
+### Código
+- Blocos de código com syntax highlighting
+- Código inline
+
+### Outros
+- > Citações
+- Tabelas
+- Imagens
+- Linhas horizontais
+- Links clicáveis
 
 ## 🚨 Solução de Problemas
 
 ### Erro "Tainted Canvas"
-
-Se você encontrar o erro "Tainted canvases may not be exported", certifique-se de que:
-
-1. A aplicação está rodando em um servidor HTTP (não file://)
-2. O `live-server` está sendo usado
-3. A configuração `useCORS: true` está ativa
+Se encontrar o erro "Tainted canvases may not be exported":
+1. Certifique-se de que a aplicação está rodando em servidor HTTP
+2. Use `npm start` para iniciar o live-server
+3. Não abra o arquivo diretamente no navegador (file://)
 
 ### Problemas de Performance
-
 Para documentos muito grandes:
-
 - Ajuste o `scale` no html2canvas (valores menores = mais rápido)
 - Considere dividir o conteúdo em seções menores
 - Use `logging: false` para reduzir overhead
 
-## 📝 Uso da Aplicação
-
-1. **Editar**: Digite ou cole seu conteúdo Markdown no editor à esquerda
-2. **Visualizar**: Veja o preview em tempo real à direita
-3. **Gerar PDF**: Clique em "⬇️ Gerar PDF" para baixar o arquivo
-4. **Exemplo**: Use "📝 Carregar Exemplo" para ver a documentação técnica
+### Links Não Funcionam
+- Verifique se os links estão no formato correto: `[texto](url)`
+- Links relativos podem não funcionar no PDF
+- Use URLs completas (https://) para melhor compatibilidade
 
 ## 🎯 Casos de Uso
 
 Esta ferramenta é ideal para:
 
-- Documentação técnica de APIs
-- Relatórios de sistemas financeiros
-- Documentação de endpoints de pagamento
-- Manuais de integração
-- Especificações técnicas
+- **Documentação Técnica**: APIs, endpoints, integrações
+- **Relatórios**: Relatórios técnicos e de negócios
+- **Manuais**: Manuais de usuário e técnicos
+- **Especificações**: Especificações de sistemas
+- **Documentação de Código**: READMEs e documentação de projetos
+- **Apresentações**: Conteúdo para apresentações
+- **Artigos**: Artigos técnicos e tutoriais
+
+## 🔒 Segurança e Privacidade
+
+- **100% Local**: A aplicação roda completamente no seu computador
+- **Sem Dados Externos**: Nenhum conteúdo é enviado para servidores externos
+- **Privacidade Total**: Seus dados permanecem no ambiente local
+- **Sem Tracking**: Não há coleta de informações pessoais
 
 ## 📄 Exemplo Incluído
 
-O projeto inclui um exemplo completo de documentação técnica para o endpoint `/cards/duplicate-card`, demonstrando:
+O projeto inclui um exemplo completo demonstrando:
+- Títulos e subtítulos
+- Parágrafos de texto
+- Listas ordenadas e não ordenadas
+- Blocos de código
+- Tabelas
+- Citações
+- Links clicáveis
+- Imagens
 
-- Especificações de API
-- Fluxos de validação
-- Códigos de erro
-- Estrutura de dados
-- Considerações de segurança
+## 🤝 Contribuição
 
-## 🔒 Segurança
+Contribuições são bem-vindas! Para contribuir:
 
-- A aplicação roda localmente, sem envio de dados para servidores externos
-- Dados sensíveis permanecem no ambiente local
-- Não há coleta de informações pessoais
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
 ## 📞 Suporte
 
-Para problemas ou dúvidas sobre a aplicação, verifique:
+Para problemas ou dúvidas:
 
-1. Se o Node.js está instalado corretamente
-2. Se as dependências foram instaladas (`npm install`)
-3. Se o servidor está rodando em HTTP (não file://)
-4. Console do navegador para erros específicos
+1. Verifique se o Node.js está instalado corretamente
+2. Confirme se as dependências foram instaladas (`npm install`)
+3. Certifique-se de que o servidor está rodando em HTTP
+4. Verifique o console do navegador para erros específicos
+5. Abra uma issue no repositório
+
+## 📝 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 🎉 Agradecimentos
+
+- [Marked.js](https://marked.js.org/) - Parser de Markdown
+- [html2canvas](https://html2canvas.hertzen.com/) - Captura de tela
+- [jsPDF](https://github.com/parallax/jsPDF) - Geração de PDF
+- [live-server](https://github.com/tapio/live-server) - Servidor de desenvolvimento
+
+---
+
+**Desenvolvido com ❤️ para facilitar a conversão de Markdown para PDF**
